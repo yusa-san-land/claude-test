@@ -1,44 +1,81 @@
 <!DOCTYPE html>
 <html lang="ja">
 <head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>シンプル電卓</title>
-    <link rel="stylesheet" href="styles.css">
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>国土交通省ニュースウォッチャー</title>
+  <meta name="description" content="国土交通省のプレスリリースを自動収集し、AI 要約付きで一覧表示するダッシュボードです。" />
+  <link rel="stylesheet" href="styles.css" />
 </head>
 <body>
-    <div class="calculator">
-        <h1 class="title">電卓</h1>
-        <div class="display">
-            <div class="previous-operand" id="previousOperand"></div>
-            <div class="current-operand" id="currentOperand">0</div>
-        </div>
-        <div class="buttons">
-            <button class="btn btn-clear" data-action="clear">AC</button>
-            <button class="btn btn-function" data-action="delete">DEL</button>
-            <button class="btn btn-function" data-action="percent">%</button>
-            <button class="btn btn-operator" data-action="operator" data-value="÷">÷</button>
-
-            <button class="btn btn-number" data-action="number" data-value="7">7</button>
-            <button class="btn btn-number" data-action="number" data-value="8">8</button>
-            <button class="btn btn-number" data-action="number" data-value="9">9</button>
-            <button class="btn btn-operator" data-action="operator" data-value="×">×</button>
-
-            <button class="btn btn-number" data-action="number" data-value="4">4</button>
-            <button class="btn btn-number" data-action="number" data-value="5">5</button>
-            <button class="btn btn-number" data-action="number" data-value="6">6</button>
-            <button class="btn btn-operator" data-action="operator" data-value="−">−</button>
-
-            <button class="btn btn-number" data-action="number" data-value="1">1</button>
-            <button class="btn btn-number" data-action="number" data-value="2">2</button>
-            <button class="btn btn-number" data-action="number" data-value="3">3</button>
-            <button class="btn btn-operator" data-action="operator" data-value="+">+</button>
-
-            <button class="btn btn-number btn-zero" data-action="number" data-value="0">0</button>
-            <button class="btn btn-number" data-action="number" data-value=".">.</button>
-            <button class="btn btn-equals" data-action="equals">=</button>
-        </div>
+  <header class="site-header">
+    <div class="container">
+      <h1 class="site-title">
+        <span class="logo-mark" aria-hidden="true">🏛️</span>
+        国土交通省ニュースウォッチャー
+      </h1>
+      <p class="site-tagline">
+        国土交通省のプレスリリースを定期的に取得し、AI による要約とカテゴリ分類で素早く把握できます。
+      </p>
+      <div class="meta-bar">
+        <span class="meta-item">
+          <span class="meta-label">最終取得:</span>
+          <span id="fetched-at" class="meta-value">読み込み中...</span>
+        </span>
+        <span class="meta-item">
+          <span class="meta-label">件数:</span>
+          <span id="count" class="meta-value">-</span>
+        </span>
+        <span class="meta-item">
+          <span class="meta-label">情報源:</span>
+          <a id="source-link" class="meta-value" href="https://www.mlit.go.jp/report/press/index.html" target="_blank" rel="noopener noreferrer">
+            mlit.go.jp / 報道発表
+          </a>
+        </span>
+      </div>
     </div>
-    <script src="script.js"></script>
+  </header>
+
+  <main class="container">
+    <section class="controls" aria-label="絞り込み">
+      <div class="control-group">
+        <label for="search">キーワード検索</label>
+        <input id="search" type="search" placeholder="例: 道路 / 港湾 / 観光" autocomplete="off" />
+      </div>
+      <div class="control-group">
+        <label for="category">カテゴリ</label>
+        <select id="category">
+          <option value="">すべて</option>
+        </select>
+      </div>
+      <div class="control-group">
+        <label for="importance">重要度</label>
+        <select id="importance">
+          <option value="">すべて</option>
+          <option value="high">重要のみ</option>
+          <option value="normal">通常</option>
+        </select>
+      </div>
+    </section>
+
+    <section id="news-section" aria-live="polite">
+      <div id="status" class="status">読み込み中...</div>
+      <ul id="news-list" class="news-list"></ul>
+    </section>
+  </main>
+
+  <footer class="site-footer">
+    <div class="container">
+      <p>
+        本サイトは国土交通省 (MLIT) の公開情報を参照しています。要約は AI による自動生成であり、
+        正確性は保証されません。必ず一次情報源で内容をご確認ください。
+      </p>
+      <p>
+        <a href="archive/calculator/index.html">以前の電卓アプリ (アーカイブ)</a>
+      </p>
+    </div>
+  </footer>
+
+  <script src="app.js"></script>
 </body>
 </html>
