@@ -1,0 +1,156 @@
+* {
+    margin: 0;
+    padding: 0;
+    box-sizing: border-box;
+    font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", "Helvetica Neue", Arial, sans-serif;
+}
+
+body {
+    min-height: 100vh;
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+    padding: 20px;
+}
+
+.calculator {
+    background: #1c1c1e;
+    border-radius: 24px;
+    padding: 24px;
+    box-shadow: 0 20px 60px rgba(0, 0, 0, 0.3);
+    width: 100%;
+    max-width: 360px;
+}
+
+.title {
+    color: #fff;
+    text-align: center;
+    margin-bottom: 16px;
+    font-size: 18px;
+    font-weight: 500;
+    letter-spacing: 2px;
+    opacity: 0.7;
+}
+
+.display {
+    background: #2c2c2e;
+    border-radius: 16px;
+    padding: 24px 20px;
+    margin-bottom: 20px;
+    text-align: right;
+    min-height: 120px;
+    display: flex;
+    flex-direction: column;
+    justify-content: flex-end;
+    overflow: hidden;
+}
+
+.previous-operand {
+    color: rgba(255, 255, 255, 0.5);
+    font-size: 20px;
+    min-height: 24px;
+    word-wrap: break-word;
+    word-break: break-all;
+}
+
+.current-operand {
+    color: #fff;
+    font-size: 48px;
+    font-weight: 300;
+    word-wrap: break-word;
+    word-break: break-all;
+    line-height: 1.2;
+}
+
+.buttons {
+    display: grid;
+    grid-template-columns: repeat(4, 1fr);
+    gap: 12px;
+}
+
+.btn {
+    border: none;
+    border-radius: 50%;
+    aspect-ratio: 1 / 1;
+    font-size: 24px;
+    font-weight: 500;
+    cursor: pointer;
+    transition: all 0.15s ease;
+    user-select: none;
+    -webkit-tap-highlight-color: transparent;
+}
+
+.btn:active {
+    transform: scale(0.95);
+    opacity: 0.8;
+}
+
+.btn-number {
+    background: #505050;
+    color: #fff;
+}
+
+.btn-number:hover {
+    background: #606060;
+}
+
+.btn-function,
+.btn-clear {
+    background: #a5a5a5;
+    color: #1c1c1e;
+}
+
+.btn-function:hover,
+.btn-clear:hover {
+    background: #b8b8b8;
+}
+
+.btn-operator {
+    background: #ff9f0a;
+    color: #fff;
+}
+
+.btn-operator:hover {
+    background: #ffb340;
+}
+
+.btn-operator.active {
+    background: #fff;
+    color: #ff9f0a;
+}
+
+.btn-equals {
+    background: #ff9f0a;
+    color: #fff;
+}
+
+.btn-equals:hover {
+    background: #ffb340;
+}
+
+.btn-zero {
+    grid-column: span 2;
+    aspect-ratio: auto;
+    border-radius: 40px;
+    text-align: left;
+    padding-left: 28px;
+}
+
+@media (max-width: 400px) {
+    .calculator {
+        padding: 16px;
+    }
+
+    .current-operand {
+        font-size: 40px;
+    }
+
+    .btn {
+        font-size: 20px;
+    }
+
+    .buttons {
+        gap: 10px;
+    }
+}
