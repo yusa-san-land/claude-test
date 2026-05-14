@@ -1,179 +1,132 @@
-class Calculator {
-    constructor(previousOperandEl, currentOperandEl) {
-        this.previousOperandEl = previousOperandEl;
-        this.currentOperandEl = currentOperandEl;
-        this.clear();
-    }
+let allNews = [];
+let currentCategory = null;
 
-    clear() {
-        this.currentOperand = '0';
-        this.previousOperand = '';
-        this.operation = undefined;
-        this.shouldResetDisplay = false;
-    }
+async function loadNews() {
+    const container = document.getElementById('newsContainer');
+    const lastUpdatedEl = document.getElementById('lastUpdated');
 
-    delete() {
-        if (this.shouldResetDisplay) return;
-        if (this.currentOperand.length === 1) {
-            this.currentOperand = '0';
+    container.innerHTML = '<div class="loading"><div class="spinner"></div><p>情報を読み込み中...</p></div>';
+    document.getElementById('emptyState').style.display = 'none';
+
+    try {
+        const res = await fetch('data/news.json?t=' + Date.now());
+        if (!res.ok) throw new Error(`HTTP ${res.status}`);
+        const data = await res.json();
+
+        allNews = data.items || [];
+
+        if (data.last_updated) {
+            const d = new Date(data.last_updated);
+            lastUpdatedEl.textContent = '最終更新: ' + d.toLocaleString('ja-JP', {
+                year: 'numeric', month: '2-digit', day: '2-digit',
+                hour: '2-digit', minute: '2-digit', timeZone: 'Asia/Tokyo'
+            }) + ' JST';
         } else {
-            this.currentOperand = this.currentOperand.slice(0, -1);
+            lastUpdatedEl.textContent = '未更新';
         }
-    }
 
-    appendNumber(value) {
-        if (this.shouldResetDisplay) {
-            this.currentOperand = '0';
-            this.shouldResetDisplay = false;
-        }
-        if (value === '.' && this.currentOperand.includes('.')) return;
-        if (this.currentOperand === '0' && value !== '.') {
-            this.currentOperand = value;
-        } else {
-            this.currentOperand += value;
-        }
-    }
-
-    chooseOperation(operation) {
-        if (this.currentOperand === '' && this.previousOperand === '') return;
-        if (this.previousOperand !== '' && !this.shouldResetDisplay) {
-            this.compute();
-        }
-        this.operation = operation;
-        this.previousOperand = this.currentOperand;
-        this.shouldResetDisplay = true;
-    }
-
-    percent() {
-        const current = parseFloat(this.currentOperand);
-        if (isNaN(current)) return;
-        this.currentOperand = String(current / 100);
-    }
-
-    compute() {
-        let computation;
-        const prev = parseFloat(this.previousOperand);
-        const current = parseFloat(this.currentOperand);
-        if (isNaN(prev) || isNaN(current)) return;
-        switch (this.operation) {
-            case '+':
-                computation = prev + current;
-                break;
-            case '−':
-                computation = prev - current;
-                break;
-            case '×':
-                computation = prev * current;
-                break;
-            case '÷':
-                if (current === 0) {
-                    this.currentOperand = 'エラー';
-                    this.previousOperand = '';
-                    this.operation = undefined;
-                    this.shouldResetDisplay = true;
-                    return;
-                }
-                computation = prev / current;
-                break;
-            default:
-                return;
-        }
-        this.currentOperand = this.formatResult(computation);
-        this.operation = undefined;
-        this.previousOperand = '';
-        this.shouldResetDisplay = true;
-    }
-
-    formatResult(num) {
-        if (!isFinite(num)) return 'エラー';
-        const rounded = Math.round(num * 1e10) / 1e10;
-        return String(rounded);
-    }
-
-    getDisplayNumber(numberStr) {
-        if (numberStr === 'エラー') return numberStr;
-        if (numberStr === '' || numberStr === undefined) return '';
-        const [integerPart, decimalPart] = numberStr.split('.');
-        const intNum = parseFloat(integerPart);
-        let integerDisplay;
-        if (isNaN(intNum)) {
-            integerDisplay = '';
-        } else {
-            integerDisplay = intNum.toLocaleString('en', { maximumFractionDigits: 0 });
-        }
-        return decimalPart != null ? `${integerDisplay}.${decimalPart}` : integerDisplay;
-    }
-
-    updateDisplay() {
-        this.currentOperandEl.textContent = this.getDisplayNumber(this.currentOperand);
-        if (this.operation != null) {
-            this.previousOperandEl.textContent =
-                `${this.getDisplayNumber(this.previousOperand)} ${this.operation}`;
-        } else {
-            this.previousOperandEl.textContent = '';
-        }
+        buildCategoryFilters();
+        renderNews();
+    } catch (e) {
+        container.innerHTML =
+            '<div class="error-state">' +
+            '<p>データの読み込みに失敗しました。しばらくしてから「更新」ボタンを押してください。</p>' +
+            '<p>' + escHtml(e.message) + '</p>' +
+            '</div>';
+        lastUpdatedEl.textContent = 'エラー';
     }
 }
 
-const previousOperandEl = document.getElementById('previousOperand');
-const currentOperandEl = document.getElementById('currentOperand');
-const calculator = new Calculator(previousOperandEl, currentOperandEl);
-
-document.querySelectorAll('.btn').forEach(button => {
-    button.addEventListener('click', () => {
-        const action = button.dataset.action;
-        const value = button.dataset.value;
-        switch (action) {
-            case 'number':
-                calculator.appendNumber(value);
-                break;
-            case 'operator':
-                calculator.chooseOperation(value);
-                break;
-            case 'equals':
-                calculator.compute();
-                break;
-            case 'clear':
-                calculator.clear();
-                break;
-            case 'delete':
-                calculator.delete();
-                break;
-            case 'percent':
-                calculator.percent();
-                break;
-        }
-        calculator.updateDisplay();
+function buildCategoryFilters() {
+    const cats = [...new Set(allNews.map(n => n.category).filter(Boolean))].sort();
+    const el = document.getElementById('categoryFilters');
+    el.innerHTML = '<button class="filter-btn active" onclick="filterByCategory(null,this)">すべて</button>';
+    cats.forEach(cat => {
+        const btn = document.createElement('button');
+        btn.className = 'filter-btn';
+        btn.textContent = cat;
+        btn.onclick = function () { filterByCategory(cat, this); };
+        el.appendChild(btn);
     });
-});
+}
 
-document.addEventListener('keydown', (e) => {
-    if (/^[0-9]$/.test(e.key)) {
-        calculator.appendNumber(e.key);
-    } else if (e.key === '.') {
-        calculator.appendNumber('.');
-    } else if (e.key === '+') {
-        calculator.chooseOperation('+');
-    } else if (e.key === '-') {
-        calculator.chooseOperation('−');
-    } else if (e.key === '*') {
-        calculator.chooseOperation('×');
-    } else if (e.key === '/') {
-        e.preventDefault();
-        calculator.chooseOperation('÷');
-    } else if (e.key === '%') {
-        calculator.percent();
-    } else if (e.key === 'Enter' || e.key === '=') {
-        e.preventDefault();
-        calculator.compute();
-    } else if (e.key === 'Backspace') {
-        calculator.delete();
-    } else if (e.key === 'Escape') {
-        calculator.clear();
-    } else {
+function filterByCategory(cat, btn) {
+    currentCategory = cat;
+    document.querySelectorAll('.filter-btn').forEach(b => b.classList.remove('active'));
+    btn.classList.add('active');
+    renderNews();
+}
+
+function renderNews() {
+    const query = document.getElementById('searchInput').value.toLowerCase();
+    const container = document.getElementById('newsContainer');
+    const emptyState = document.getElementById('emptyState');
+
+    let items = allNews;
+
+    if (currentCategory) {
+        items = items.filter(n => n.category === currentCategory);
+    }
+    if (query) {
+        items = items.filter(n =>
+            n.title.toLowerCase().includes(query) ||
+            (n.summary || '').toLowerCase().includes(query)
+        );
+    }
+
+    if (allNews.length === 0) {
+        container.innerHTML =
+            '<div class="no-data-state">' +
+            '<h3>データがまだありません</h3>' +
+            '<p>GitHub Actions のワークフロー (<code>update-mlit-news</code>) を手動実行するか、<br>' +
+            '次回の定期実行（6時間ごと）をお待ちください。</p>' +
+            '</div>';
+        emptyState.style.display = 'none';
         return;
     }
-    calculator.updateDisplay();
-});
 
-calculator.updateDisplay();
+    if (items.length === 0) {
+        container.innerHTML = '';
+        emptyState.style.display = 'block';
+        return;
+    }
+
+    emptyState.style.display = 'none';
+
+    const now = Date.now();
+    const threeDays = 3 * 24 * 60 * 60 * 1000;
+
+    container.innerHTML = items.map(item => {
+        const d = item.date ? new Date(item.date) : null;
+        const isNew = d && (now - d.getTime()) < threeDays;
+        const dateStr = d ? d.toLocaleDateString('ja-JP', {
+            year: 'numeric', month: 'long', day: 'numeric'
+        }) : '日付不明';
+
+        return (
+            '<article class="news-card">' +
+            '<div class="card-header">' +
+            '<span class="card-date">' + dateStr + '</span>' +
+            (item.category ? '<span class="card-category">' + escHtml(item.category) + '</span>' : '') +
+            '</div>' +
+            '<div class="card-body">' +
+            '<h2 class="card-title">' + escHtml(item.title) +
+            (isNew ? '<span class="new-badge">NEW</span>' : '') +
+            '</h2>' +
+            (item.summary ? '<p class="card-summary">' + escHtml(item.summary) + '</p>' : '') +
+            '<a href="' + escHtml(item.url) + '" target="_blank" rel="noopener" class="card-link">詳細を見る →</a>' +
+            '</div>' +
+            '</article>'
+        );
+    }).join('');
+}
+
+function escHtml(s) {
+    return String(s)
+        .replace(/&/g, '&amp;')
+        .replace(/</g, '&lt;')
+        .replace(/>/g, '&gt;')
+        .replace(/"/g, '&quot;');
+}
+
+loadNews();
